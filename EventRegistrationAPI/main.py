@@ -66,7 +66,7 @@ def register_user(registration: RegistrationCreate, db = Depends(get_db)):
 
     event = db.query(Event).filter(
         Event.id == registration.event_id
-    ).first()
+    ).with_for_update() .first()
 
     if not event:
         raise HTTPException(
@@ -86,9 +86,7 @@ def register_user(registration: RegistrationCreate, db = Depends(get_db)):
             detail="User already registered"
         )
 
-    active_registrations = db.query(
-        Registration
-    ).filter(
+    active_registrations = db.query(Registration).filter(
         Registration.event_id == registration.event_id,
         Registration.is_cancelled == False
     ).count()
@@ -102,7 +100,7 @@ def register_user(registration: RegistrationCreate, db = Depends(get_db)):
     new_registration = Registration(
         user_name=registration.user_name,
         event_id=registration.event_id,
-        registered_at=datetime.utcnow(),
+        registered_at=datetime.now(timezone.utc),
         is_cancelled=False
     )
 
